@@ -115,6 +115,7 @@ Scripts locales de apoyo:
 1. `powershell -ExecutionPolicy Bypass -File automation/bootstrap_github_remote.ps1`
 2. `powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1`
 3. `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1`
+4. `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
 
 Automatizacion local recomendada:
 
@@ -122,3 +123,9 @@ Automatizacion local recomendada:
 2. ejecuta `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1 -ReportId "<report_id>"`
 3. el script copia media a `legal-site/media/<report_id>/`, valida el bundle y hace `push`
 4. GitHub Actions despliega Pages y publica en TikTok
+
+Programacion local:
+
+- tarea diaria a las `07:00`: `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
+- prueba puntual con un reporte concreto:
+  `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1 -SkipDaily -TestAt "2026-04-29 21:20" -TestReportId "2026-04-29-2100-krenko-mob-boss"`
