@@ -38,10 +38,17 @@ jobs:
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TOKEN_STORE_PATH: .secrets/tiktok_tokens.json
     steps:
-      - name: Checkout
+      - name: Checkout workflow_run commit
+        if: github.event_name == 'workflow_run'
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Checkout selected branch
+        if: github.event_name != 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
