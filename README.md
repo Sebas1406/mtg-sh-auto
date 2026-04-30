@@ -114,3 +114,11 @@ Scripts locales de apoyo:
 
 1. `powershell -ExecutionPolicy Bypass -File automation/bootstrap_github_remote.ps1`
 2. `powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1`
+3. `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1`
+
+Automatizacion local recomendada:
+
+1. Codex genera `publish_queue/<report_id>.json` y `tiktok_assets/<report_id>/`
+2. ejecuta `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1 -ReportId "<report_id>"`
+3. el script copia media a `legal-site/media/<report_id>/`, valida el bundle y hace `push`
+4. GitHub Actions despliega Pages y publica en TikTok

@@ -172,9 +172,15 @@ Repositorio recomendado:
 Automatizacion local minima:
 
 1. inicializa el remoto con `automation/bootstrap_github_remote.ps1`
-2. cuando Codex termine de generar y copiar el bundle publico, ejecuta `automation/push_publish_bundle.ps1`
+2. cuando Codex termine de generar el bundle, ejecuta `automation/finalize_and_publish_bundle.ps1`
 3. GitHub Pages despliega `legal-site/`
 4. el workflow de TikTok publica automaticamente despues del deploy
+
+Comando recomendado:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1 -ReportId "<report_id>"
+```
 
 ## Rutas importantes
 
