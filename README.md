@@ -116,6 +116,7 @@ Scripts locales de apoyo:
 2. `powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1`
 3. `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1`
 4. `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
+5. `powershell -ExecutionPolicy Bypass -File automation/register_full_daily_flow_task.ps1`
 
 Automatizacion local recomendada:
 
@@ -129,3 +130,15 @@ Programacion local:
 - tarea diaria a las `07:00`: `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
 - prueba puntual con un reporte concreto:
   `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1 -SkipDaily -TestAt "2026-04-29 21:20" -TestReportId "2026-04-29-2100-krenko-mob-boss"`
+
+Automatizacion diaria completa:
+
+1. registra la tarea con `powershell -ExecutionPolicy Bypass -File automation/register_full_daily_flow_task.ps1 -DailyTime "08:00"`
+2. cada dia el script elige un comandante de una rotacion y ejecuta:
+   - generacion del reporte
+   - export JSON
+   - render de imagenes
+   - armado de queue
+   - stage de media
+   - commit y push
+   - Pages + TikTok por GitHub Actions
