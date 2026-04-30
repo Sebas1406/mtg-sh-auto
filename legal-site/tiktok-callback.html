@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TikTok Callback | MTG Auto Publisher</title>
+    <style>
+      :root {
+        --bg: #f6f2e8;
+        --panel: #fffdf8;
+        --text: #231d19;
+        --muted: #655a53;
+        --accent: #8d2f1e;
+        --line: #ddd1c1;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: Georgia, "Times New Roman", serif;
+        background: linear-gradient(180deg, #fbf7ef 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 760px;
+        width: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 36px;
+        box-shadow: 0 14px 35px rgba(50, 30, 12, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1.1;
+      }
+
+      p {
+        line-height: 1.7;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      code {
+        background: rgba(141, 47, 30, 0.08);
+        padding: 2px 6px;
+        border-radius: 6px;
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TikTok authorization callback</h1>
+      <p>
+        This page is used as the registered redirect URI for MTG Auto Publisher during
+        TikTok OAuth authorization.
+      </p>
+      <p>
+        When the production integration is connected, TikTok will redirect the user
+        back to this URL with an authorization code. The backend application will then
+        exchange that code for an access token.
+      </p>
+      <p>
+        Registered callback URL:
+        <code>https://mtgsh.netlify.app/tiktok-callback.html</code>
+      </p>
+      <p id="status">Waiting for TikTok authorization response...</p>
+    </main>
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const status = document.getElementById("status");
+        if (!params.has("code") && !params.has("error")) {
+          status.textContent = "No authorization code detected yet.";
+          return;
+        }
+
+        const localUrl = new URL("http://127.0.0.1:8765/auth/tiktok/local-callback");
+        for (const [key, value] of params.entries()) {
+          localUrl.searchParams.set(key, value);
+        }
+
+        status.textContent = "Authorization received. Forwarding to the local MTG Auto Publisher app...";
+        window.location.replace(localUrl.toString());
+      })();
+    </script>
+  </body>
+  </html>

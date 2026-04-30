@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, initial-scale=1.0">
+  <title>{{ slide.filename }}</title>
+  <style>
+    :root {
+      --ink: #1e1b1a;
+      --paper: {{ theme.paper }};
+      --paper-dark: {{ theme.shadow }};
+      --paper-light: {{ theme.light }};
+      --paper-tint: {{ theme.tint }};
+      --label-bg: #1f1f21;
+      --shadow: rgba(0, 0, 0, 0.28);
+      --cream: #fffaf0;
+      --icon-ink: {{ theme.icon }};
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    body {
+      position: relative;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255, 251, 236, 0.92) 0 18%, rgba(255, 251, 236, 0) 40%),
+        radial-gradient(circle at 15% 84%, var(--paper-tint) 0 10%, rgba(122, 81, 26, 0) 34%),
+        radial-gradient(circle at 85% 86%, var(--paper-tint) 0 10%, rgba(122, 81, 26, 0) 34%),
+        linear-gradient(180deg, rgba(123, 85, 31, 0.20), rgba(255, 255, 255, 0) 10%, rgba(255,255,255,0) 88%, rgba(123, 85, 31, 0.18)),
+        repeating-linear-gradient(0deg, rgba(109, 75, 29, 0.055) 0 2px, rgba(255,255,255,0) 2px 9px),
+        repeating-linear-gradient(90deg, rgba(109, 75, 29, 0.05) 0 2px, rgba(255,255,255,0) 2px 11px),
+        linear-gradient(180deg, var(--paper-light), var(--paper) 28%, color-mix(in srgb, var(--paper) 80%, var(--paper-dark) 20%) 70%, var(--paper-dark));
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      background-image:
+        radial-gradient(circle at 20% 30%, #000 0 1px, transparent 1px),
+        radial-gradient(circle at 80% 60%, #000 0 1px, transparent 1px),
+        radial-gradient(circle at 40% 80%, #000 0 1px, transparent 1px),
+        radial-gradient(circle at 75% 20%, #000 0 1px, transparent 1px);
+      background-size: 180px 180px;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    .page {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      padding: 220px 62px 360px;
+    }
+
+    .page.cover {
+      padding-top: 340px;
+      padding-bottom: 382px;
+    }
+
+    .page.grid-page {
+      padding-top: 390px;
+      padding-bottom: 330px;
+    }
+
+    .brand-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 0;
+    }
+
+    .brand-stack {
+      text-align: center;
+      line-height: 0.92;
+    }
+
+    .brand-commander {
+      display: block;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 34px;
+      color: var(--cream);
+      -webkit-text-stroke: 6px #202020;
+      paint-order: stroke fill;
+      transform: rotate(-5deg);
+      text-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .brand-deckcase {
+      display: block;
+      margin-top: -6px;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 76px;
+      color: var(--cream);
+      -webkit-text-stroke: 10px #202020;
+      paint-order: stroke fill;
+      letter-spacing: 1px;
+      text-shadow: 0 9px 0 rgba(0, 0, 0, 0.16);
+    }
+
+    .walker-icon {
+      width: 60px;
+      height: 82px;
+      background: var(--icon-ink);
+      clip-path: polygon(47% 0%, 38% 42%, 28% 18%, 24% 62%, 12% 26%, 11% 74%, 4% 58%, 14% 100%, 50% 74%, 86% 100%, 96% 58%, 89% 74%, 88% 26%, 76% 62%, 72% 18%, 62% 42%, 53% 0%);
+      filter: drop-shadow(0 2px 0 rgba(0,0,0,.12));
+      flex: 0 0 auto;
+    }
+
+    .series-title {
+      margin: 14px auto 0;
+      width: fit-content;
+      padding: 7px 16px 9px;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 28px;
+      color: var(--cream);
+      background: #202020;
+      border-radius: 10px;
+      letter-spacing: 1px;
+      line-height: 1;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+    }
+
+    .section-title {
+      margin: 0 auto 24px;
+      width: fit-content;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 44px;
+      color: var(--cream);
+      -webkit-text-stroke: 6px #202020;
+      paint-order: stroke fill;
+      letter-spacing: 0.5px;
+      text-transform: {{ "none" if slide.kind == "cover" else "none" }};
+      text-align: center;
+      line-height: 0.98;
+      max-width: 860px;
+    }
+
+    .section-title.mix {
+      font-size: 40px;
+      max-width: 820px;
+      line-height: 1;
+    }
+
+    .grid-kicker {
+      margin: 0 auto 18px;
+      width: fit-content;
+      padding: 8px 18px 10px;
+      background: #202020;
+      color: var(--cream);
+      border-radius: 999px;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 24px;
+      letter-spacing: 0.8px;
+      line-height: 1;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    }
+
+    .cover-card {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 42px;
+    }
+
+    .cover-card img {
+      width: 520px;
+      height: 724px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.18));
+    }
+
+    .metrics {
+      position: absolute;
+      left: 126px;
+      right: 126px;
+      bottom: 344px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: end;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .metric-circle {
+      width: 134px;
+      height: 134px;
+      border-radius: 50%;
+      background: #1f1f21;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 14px;
+      font-family: Impact, "Arial Black", sans-serif;
+      line-height: 0.92;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.12);
+    }
+
+    .metric-value.big {
+      font-size: 52px;
+    }
+
+    .metric-value.medium {
+      font-size: 32px;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value.small {
+      font-size: 27px;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-label {
+      margin-top: -12px;
+      min-width: 110px;
+      padding: 6px 10px 8px;
+      text-align: center;
+      background: #1f1f21;
+      color: var(--cream);
+      border-radius: 999px;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    }
+
+    .handle {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 286px;
+      text-align: center;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 28px;
+      color: var(--cream);
+      -webkit-text-stroke: 5px #202020;
+      paint-order: stroke fill;
+      letter-spacing: 1px;
+    }
+
+    .grid {
+      margin: 0 auto;
+      width: 804px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px 12px;
+    }
+
+    .card-slot {
+      position: relative;
+      height: 294px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .card-slot img {
+      width: 214px;
+      height: 282px;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.15));
+    }
+
+    .card-tag {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 10px 5px;
+      background: var(--label-bg);
+      color: var(--cream);
+      border-radius: 8px;
+      font-family: Impact, "Arial Black", sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+      white-space: nowrap;
+    }
+
+    .watermark {
+      position: absolute;
+      right: 38px;
+      bottom: 334px;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      font-size: 22px;
+      color: rgba(255,255,255,0.96);
+      text-shadow: 0 2px 4px rgba(0,0,0,.25);
+    }
+
+    .watermark::before {
+      content: "♪ ";
+    }
+  </style>
+</head>
+<body>
+  <div class="page {% if slide.kind == 'cover' %}cover{% else %}grid-page{% endif %}">
+
+    {% if slide.kind == "cover" %}
+      <div class="brand-top">
+        <div class="walker-icon"></div>
+        <div class="brand-stack">
+          <span class="brand-commander">{{ brand_top_text }}</span>
+          <span class="brand-deckcase">Deck Case</span>
+        </div>
+        <div class="walker-icon"></div>
+      </div>
+
+      <div class="series-title">{{ deck_case_title }}</div>
+
+      <div class="cover-card">
+        <img src="{{ slide.commander_card_url }}" alt="{{ commander_name }}">
+      </div>
+
+      <div class="metrics">
+        {% for metric in slide.metrics %}
+          <div class="metric">
+            <div class="metric-circle">
+              <div class="metric-value {{ metric.size }}">{{ metric.value }}</div>
+            </div>
+            <div class="metric-label">{{ metric.label }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="grid-kicker">Commander Deck Case</div>
+      <div class="section-title {% if slide.kind == 'mix' %}mix{% endif %}">{{ slide.title }}</div>
+
+      <div class="grid">
+        {% for card in slide.cards %}
+          <div class="card-slot">
+            <div class="card-tag">{{ card.tag }}</div>
+            <img src="{{ card.image_url }}" alt="{{ card.name }}">
+          </div>
+        {% endfor %}
+      </div>
+      {% if slide.show_watermark %}
+        <div class="watermark">{{ watermark_handle }}</div>
+      {% endif %}
+    {% endif %}
+
+    <div class="handle">{{ footer_handle }}</div>
+  </div>
+</body>
+</html>

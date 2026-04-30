@@ -1,0 +1,10 @@
+.env
+.secrets/
+__pycache__/
+*.pyc
+.cache/
+reports/
+report_data/
+tiktok_assets/
+tiktok-review-assets/
+publish_runs/

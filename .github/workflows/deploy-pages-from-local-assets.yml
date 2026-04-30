@@ -1,0 +1,58 @@
+name: Deploy Pages From Local Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      report_id:
+        description: "Optional report id to validate before deploy"
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - "legal-site/**"
+      - "publish_queue/**"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy-pages-from-local-assets
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      REPORT_ID: ${{ github.event.inputs.report_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate latest prepared publish bundle
+        run: |
+          if [ -n "$REPORT_ID" ]; then
+            python automation/verify_publish_bundle.py "$REPORT_ID"
+          else
+            python automation/verify_publish_bundle.py
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: legal-site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

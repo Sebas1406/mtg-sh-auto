@@ -1,0 +1,13 @@
+{
+  "timezone": "America/Lima",
+  "generation_time": "08:05",
+  "publish_times": {
+    "monday": "13:00",
+    "tuesday": "12:00",
+    "wednesday": "17:00",
+    "thursday": "17:00",
+    "friday": "18:00",
+    "saturday": "17:00",
+    "sunday": "09:00"
+  }
+}
