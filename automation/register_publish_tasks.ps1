@@ -1,5 +1,5 @@
 param(
-    [string]$DailyTime = "07:00",
+    [string]$DailyTime = "08:00",
     [string]$TestAt = "",
     [string]$TestReportId = "",
     [switch]$SkipDaily
