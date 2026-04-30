@@ -29,7 +29,7 @@ def load_queue_entry(report_id: str) -> dict[str, Any]:
 
 
 def newest_queue_entry_path() -> Path | None:
-    matches = sorted(QUEUE_DIR.glob("*.json"), key=lambda path: path.stat().st_mtime)
+    matches = sorted(path for path in QUEUE_DIR.glob("*.json") if path.name != ".gitkeep")
     return matches[-1] if matches else None
 
 
