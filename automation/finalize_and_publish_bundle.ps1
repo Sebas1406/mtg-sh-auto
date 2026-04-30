@@ -25,12 +25,22 @@ function Require-Command {
 Require-Command python
 Require-Command git
 
+$pushArgs = @{
+    Branch = $Branch
+    Remote = $Remote
+}
+
 if ($ReportId) {
     python automation/stage_tiktok_media.py $ReportId
-    powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1 -ReportId $ReportId -Branch $Branch -Remote $Remote -CommitMessage $CommitMessage
+    $pushArgs.ReportId = $ReportId
 } else {
     python automation/stage_tiktok_media.py
-    powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1 -Branch $Branch -Remote $Remote -CommitMessage $CommitMessage
 }
+
+if ($CommitMessage) {
+    $pushArgs.CommitMessage = $CommitMessage
+}
+
+& (Join-Path $root "automation\push_publish_bundle.ps1") @pushArgs
 
 Write-Host "Local bundle finalized and pushed. GitHub Actions will handle Pages and TikTok."
