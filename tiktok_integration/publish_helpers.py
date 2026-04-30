@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from pathlib import PureWindowsPath
 from typing import Any
 from urllib.parse import quote
 
@@ -62,17 +63,28 @@ def stage_queue_media(report_id: str) -> list[Path]:
     return written
 
 
+def _source_path_parts(source: str) -> tuple[str, str]:
+    raw = (source or "").strip()
+    windows_path = PureWindowsPath(raw)
+    windows_name = windows_path.name
+    if windows_name and windows_name != raw:
+        return windows_path.stem, windows_name
+
+    generic_path = Path(raw)
+    return generic_path.stem, generic_path.name
+
+
 def build_public_urls(report_id: str, media_base_url: str) -> list[str]:
     data = load_queue_entry(report_id)
     base = media_base_url.rstrip("/") + "/"
     target_dir = LEGAL_MEDIA_DIR / report_id
     urls = []
     for source in data.get("images", []):
-        source_path = Path(source)
-        preferred_jpg = target_dir / f"{source_path.stem}.jpg"
+        stem, fallback_name = _source_path_parts(source)
+        preferred_jpg = target_dir / f"{stem}.jpg"
         if preferred_jpg.exists():
             name = preferred_jpg.name
         else:
-            name = source_path.name
+            name = fallback_name
         urls.append(base + quote(report_id) + "/" + quote(name))
     return urls
