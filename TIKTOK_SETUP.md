@@ -163,6 +163,7 @@ Recomendacion operativa:
 - no hagas push hasta que el bundle local este completo
 - el workflow valida que existan `publish_queue/<report_id>.json` y al menos 5 imagenes en `legal-site/media/<report_id>/`
 - el workflow de publicacion se dispara al terminar correctamente el deploy de Pages
+- usa `user.info.basic,video.publish,video.upload` como valor de `TIKTOK_SCOPES` para que coincida con el token actual
 
 Repositorio recomendado:
 
