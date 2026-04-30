@@ -5,13 +5,15 @@ import sys
 import time
 from pathlib import Path
 
+import requests
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tiktok_integration.config import load_settings
 from tiktok_integration.publish_helpers import build_public_urls, load_queue_entry, resolve_report_id
-from tiktok_integration.tiktok_api import TikTokAPI
+from tiktok_integration.tiktok_api import TikTokAPI, TikTokAPIError
 from tiktok_integration.token_runtime import ensure_access_token
 from tiktok_integration.token_store import TokenStore
 
@@ -40,13 +42,26 @@ def main() -> None:
     queue = load_queue_entry(report_id)
     title, description = split_caption(queue)
     image_urls = build_public_urls(report_id, settings.media_base_url)
-    publish = api.init_photo_post(
-        access_token,
-        image_urls=image_urls,
-        title=title,
-        description=description,
-        post_mode="MEDIA_UPLOAD",
-    )
+    try:
+        publish = api.init_photo_post(
+            access_token,
+            image_urls=image_urls,
+            title=title,
+            description=description,
+            post_mode="MEDIA_UPLOAD",
+        )
+    except requests.HTTPError as exc:
+        cause = exc.__cause__
+        if isinstance(cause, TikTokAPIError):
+            debug_payload = {
+                "report_id": report_id,
+                "image_urls": image_urls,
+                "status_code": cause.status_code,
+                "tiktok_error": cause.error_payload,
+                "request_payload": cause.request_payload,
+            }
+            print(json.dumps(debug_payload, ensure_ascii=False, indent=2))
+        raise
     publish_id = publish["data"]["publish_id"]
 
     last_status = {}
