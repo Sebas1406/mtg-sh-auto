@@ -1,0 +1,29 @@
+{
+  "report_id": "2026-04-29-2100-krenko-mob-boss",
+  "created_at": "2026-04-29T20:41:19",
+  "timezone": "America/Lima",
+  "publish_times": {
+    "monday": "13:00",
+    "tuesday": "12:00",
+    "wednesday": "17:00",
+    "thursday": "17:00",
+    "friday": "18:00",
+    "saturday": "17:00",
+    "sunday": "09:00"
+  },
+  "caption": "Commander of the Day: Krenko, Mob Boss\nBracket 4 | Goblins mono-red enjambre explosivo, sacrifice value and cierres por combate | Budget $436\n5-slide deck case ready to post.\n#mtg #magicthegathering #commander #edh #decktech #tiktokgaming",
+  "commander": "Krenko, Mob Boss",
+  "cover_image": "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\01_cover_deck_case.png",
+  "images": [
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\01_cover_deck_case.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\02_spells-and-enchantments-and-artifacts.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\03_spells.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\04_creatures.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-04-29-2100-krenko-mob-boss\\05_artifacts.png"
+  ],
+  "status": "ready_for_publish",
+  "notes": [
+    "Images are in English and ready for TikTok photo post publishing.",
+    "Direct posting can be wired later to TikTok Content Posting API for photos."
+  ]
+}
