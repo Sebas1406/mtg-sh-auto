@@ -1,0 +1,23 @@
+{
+  "report_id": "2026-05-10-0800-omnath-locus-of-rage",
+  "created_at": "2026-05-10T08:00:22",
+  "timezone": "America/Lima",
+  "publish_times": {
+    "daily": "07:00"
+  },
+  "caption": "Commander of the Day: Omnath, Locus of Rage\nBracket 4 | Gruul landfall elementales, explosive ramp and dano salida | Budget $261\n5-slide deck case ready to post.\n#mtg #magicthegathering #commander #edh #decktech #tiktokgaming",
+  "commander": "Omnath, Locus of Rage",
+  "cover_image": "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\01_cover_deck_case.png",
+  "images": [
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\01_cover_deck_case.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\02_spells-and-enchantments-and-artifacts.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\03_spells.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\04_creatures.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-05-10-0800-omnath-locus-of-rage\\05_artifacts.png"
+  ],
+  "status": "ready_for_publish",
+  "notes": [
+    "Generated from scheduled control test flow.",
+    "Images are ready for TikTok photo post publishing."
+  ]
+}
