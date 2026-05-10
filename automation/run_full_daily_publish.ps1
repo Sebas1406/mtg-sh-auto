@@ -1,5 +1,5 @@
 param(
-    [string[]]$CommanderRotation = @("kaalia", "chulane", "giada", "yarok", "omnath")
+    [string[]]$CommanderRotation = @("muldrotha", "jetmir", "shorikai", "korvold", "nekusar")
 )
 
 $ErrorActionPreference = "Stop"
