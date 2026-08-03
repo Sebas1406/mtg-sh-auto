@@ -1,0 +1,23 @@
+{
+  "report_id": "2026-08-03-0800-nekusar-the-mindrazer",
+  "created_at": "2026-08-03T08:00:28",
+  "timezone": "America/Lima",
+  "publish_times": {
+    "daily": "07:00"
+  },
+  "caption": "Commander of the Day: Nekusar, the Mindrazer\nBracket 4 | Grixis wheels daño pasivo, draw punisher and control mano | Budget $343\n5-slide deck case ready to post.\n#mtg #magicthegathering #commander #edh #decktech #tiktokgaming",
+  "commander": "Nekusar, the Mindrazer",
+  "cover_image": "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\01_cover_deck_case.png",
+  "images": [
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\01_cover_deck_case.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\02_spells-and-enchantments-and-artifacts.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\03_spells.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\04_creatures.png",
+    "C:\\Users\\SebastianHurtado\\Documents\\New project\\tiktok_assets\\2026-08-03-0800-nekusar-the-mindrazer\\05_artifacts.png"
+  ],
+  "status": "ready_for_publish",
+  "notes": [
+    "Generated from scheduled control test flow.",
+    "Images are ready for TikTok photo post publishing."
+  ]
+}
