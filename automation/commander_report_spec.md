@@ -1,91 +1,54 @@
-# Commander Report Spec
+# Commander Builder Report V2 Specification
 
-Cada archivo generado por la automatizacion debe ser un Markdown autocontenido y facil de reutilizar despues.
+## Source of truth
 
-## Nombre del archivo
+The report is derived from `deck_manifests/<report_id>.json`. Markdown, JSON, images, the Moxfield export, and the publish queue must all carry the same `deck_hash`.
 
-Formato recomendado:
+## Mandatory quality gates
 
-`reports/YYYY-MM-DD-HHMM-commander-slug.md`
+- Exactly 100 cards including one or two commanders.
+- A legal command-zone configuration.
+- Current paper Commander legality for every card.
+- Every card inside the combined commander color identity.
+- Singleton by canonical English name, with only rules-defined exceptions.
+- Scryfall name, Oracle ID, card data, and image integrity.
+- 33–40 lands and sufficient colored mana sources.
+- At least 10 ramp, 10 card-advantage, 8 interaction, 2 board wipes, 3 protection, and 3 win-condition contributions.
+- Dedicated role caps prevent the list from becoming a pile of removal, ramp, or expensive finishers.
+- No more than eight nonland cards with mana value 6+.
+- Bracket-compliant Game Changers and casual play patterns.
+- Current Wizards policy data. A fallback policy cannot publish.
 
-Ejemplo:
+## Report language and tone
 
-`reports/2026-04-27-0800-atraxa-praetors-voice.md`
+- All report and carousel copy is in English.
+- Builder-first and practical.
+- Warm, friendly tavern atmosphere with clean execution.
+- Only `@sebastianhurtado92` appears as the account identity.
+- No fabricated personal anecdotes or visible AI/creator persona.
 
-## Estructura minima del documento
+## Report structure
 
-```md
-# [Nombre del commander]
+1. Commander & Deck Promise
+2. Deck Skeleton
+3. Core Engine
+4. Mana & Cards
+5. Answers & Protection
+6. How It Wins
+7. Mulligan & Turn Plan
+8. Weaknesses & Budget Swaps
+9. Verified Full Decklist
+10. Sources and validation metadata
 
-- Fecha de generacion:
-- Hora de generacion:
-- Bracket objetivo:
-- Tipo de juego:
-- Dificultad:
-- Precio actual en Card Kingdom:
-- Fuente de precio:
+## Public carousel
 
-## Resumen
+The carousel contains six 1080×1920 slides:
 
-Breve descripcion del plan del mazo, condiciones de victoria y filosofia de construccion.
+1. Deck promise, commander art, bracket, total cards, lands, average mana value, and validation badge.
+2. Dedicated deck-role counts, mana curve, and validation summary.
+3. Four core-engine cards with one-line reasons.
+4. Four mana/card-advantage cards with one-line reasons.
+5. Four interaction/protection cards with one-line reasons.
+6. Four closing cards with one-line reasons and the full-list call to action.
 
-## Commander
-
-- Nombre:
-- Coste de mana:
-- Identidad de color:
-- Tipo de carta:
-- Texto relevante:
-
-## Plan de juego
-
-### Early game
-### Mid game
-### Late game
-
-## Decklist
-
-### Commander
-1x ...
-
-### Criaturas
-...
-
-### Artefactos
-...
-
-### Encantamientos
-...
-
-### Instantaneos
-...
-
-### Conjuros
-...
-
-### Planeswalkers
-...
-
-### Tierras
-...
-
-## Notas de construccion
-
-- Razonamiento del bracket asignado.
-- Curva de mana aproximada.
-- Sinergias principales.
-- Riesgos o puntos debiles.
-
-## Fuentes
-
-- ...
-```
-
-## Reglas de contenido
-
-- La carta elegida debe poder ser commander de forma legal en Commander.
-- La decklist debe contener exactamente 100 cartas contando el commander.
-- La identidad de color debe respetarse en toda la lista.
-- El bracket entre 2 y 5 se asigna de forma aleatoria para este proyecto.
-- El informe debe indicar explicitamente que el bracket fue asignado por la automatizacion para fines del proyecto.
-- El precio debe citar Card Kingdom y el enlace usado para consultarlo.
+Every displayed card must exist in the canonical mainboard. Price must never determine featured-card priority.

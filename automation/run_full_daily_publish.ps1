@@ -1,7 +1,3 @@
-param(
-    [string[]]$CommanderRotation = @("muldrotha", "jetmir", "shorikai", "korvold", "nekusar")
-)
-
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
@@ -22,13 +18,26 @@ function Require-Command {
 Require-Command python
 Require-Command git
 
-if (-not $CommanderRotation -or $CommanderRotation.Count -eq 0) {
-    throw "Commander rotation cannot be empty."
+$publishMode = Get-Content (Join-Path $root "automation\publish_mode.json") -Raw | ConvertFrom-Json
+if ($publishMode.mode -ne "live") {
+    throw "Daily publish flow is blocked because automation/publish_mode.json is '$($publishMode.mode)'."
 }
 
-$dayIndex = (Get-Date).DayOfYear - 1
-$selectedKey = $CommanderRotation[$dayIndex % $CommanderRotation.Count]
+$output = python automation\generate_random_daily_commander_bundle.py
+if ($LASTEXITCODE -ne 0) {
+    throw "Random Commander bundle generation failed with exit code $LASTEXITCODE."
+}
+$reportId = $null
 
-Write-Host "Selected commander key for today's full daily flow: $selectedKey"
+foreach ($line in $output) {
+    Write-Host $line
+    if ($line -match '"report_id":\s*"([^"]+)"') {
+        $reportId = $matches[1]
+    }
+}
 
-& (Join-Path $root "automation\run_scheduled_test_flow.ps1") -CommanderKey $selectedKey
+if (-not $reportId) {
+    throw "Could not determine report_id from the random daily commander generator."
+}
+
+& (Join-Path $root "automation\finalize_and_publish_bundle.ps1") -ReportId $reportId

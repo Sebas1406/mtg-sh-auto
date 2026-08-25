@@ -1,144 +1,101 @@
-# MTG Commander Report Agent
+# MTG Commander Builder Automation
 
-Proyecto base para generar informes automatizados de mazos Commander en formato Markdown.
+Automatización local que selecciona un commander aleatorio desde el universo vivo de Scryfall, construye y valida una lista completa de 100 cartas, genera un informe útil para deck builders y prepara un carrusel en inglés para TikTok.
 
-## Objetivo inicial
+## Principio operativo
 
-Dos veces al dia, a las 8:00 y a las 20:00, una automatizacion debe:
+El commander se elige aleatoriamente. La decklist no.
 
-1. Elegir una carta al azar que pueda ser commander en Magic: The Gathering.
-2. Asignarle aleatoriamente un bracket entre 2, 3, 4 o 5.
-3. Construir una decklist completa de 100 cartas alrededor de esa carta.
-4. Consultar el precio actual de la carta commander en Card Kingdom.
-5. Generar un archivo Markdown con el informe del mazo.
+`deck_manifests/<report_id>.json` es la fuente de verdad. Ningún informe, imagen o queue item puede publicarse si no coincide con ese manifest y con una validación aprobada.
 
-## Estructura
+## Flujo diario
 
-- `automation/commander_report_spec.md`: especificacion del contenido esperado en cada informe.
-- `automation/tiktok_content_pipeline.md`: especificacion de la fase visual para TikTok.
-- `automation/export_report_data.py`: transforma un reporte Markdown en JSON estructurado.
-- `automation/render_tiktok_assets.py`: genera 5 imagenes verticales por reporte con una plantilla tipo `Deck Case`.
-- `automation/run_daily_pipeline.py`: ejecuta la generacion diaria completa y prepara la cola de publicacion.
-- `automation/show_publish_window.py`: muestra el paquete diario listo para publicar.
-- `automation/daily_automation_plan.md`: plan diario de horarios y ejecucion.
-- `automation/daily_publish_schedule.json`: horarios diarios de publicacion.
-- `automation/create_windows_scheduled_tasks.ps1`: registra tareas programadas en Windows.
-- `automation/templates/`: plantillas HTML/CSS para render.
-- `reports/`: salida generada por la automatizacion.
-- `report_data/`: salida JSON estructurada para la fase visual.
-- `tiktok_assets/`: imagenes listas para publicar.
-- `publish_queue/`: cola de publicaciones diarias listas.
-- `publish_runs/`: resultados de envios a TikTok y estados finales.
-- `tiktok_integration/`: backend Python local para OAuth y publicacion a TikTok.
-- `legal-site/`: sitio estatico para legal pages, callback y media publica.
-- `TIKTOK_SETUP.md`: guia operativa para conectar TikTok y publicar por API.
-- `requirements-image-rendering.txt`: dependencias recomendadas para el render visual.
-- `requirements-tiktok.txt`: dependencias del backend Python de TikTok.
+La tarea de Windows `MTG SH Full Generate And Publish Daily` se ejecuta todos los días a las 08:00, hora de Lima:
 
-## Alcance de esta primera fase
+1. Scryfall selecciona una carta con `legal:commander is:commander game:paper -is:funny -is:digital`.
+2. Se resuelve una configuración legal cuando la selección requiere Background, Partner with o Doctor's companion.
+3. EDHREC aporta señales de sinergia y popularidad.
+4. La página oficial de Commander aporta la lista viva de Game Changers.
+5. El constructor arma exactamente 100 cartas por roles, curva, fuentes de color y utilidad.
+6. El validador revisa legalidad, color identity, singleton, commander configuration, cantidad, mana, composición y bracket.
+7. Solamente después de un `pass` se generan el informe, el decklist importable, seis slides y la cola.
+8. La puerta final comprueba hashes, assets y cartas mostradas antes de cualquier push o publicación.
 
-Esta fase deja preparado el proyecto y registra la automatizacion recurrente.
-En la siguiente fase podemos agregar validaciones mas estrictas, plantillas mas avanzadas, exportes, pipelines posteriores o publicacion automatica.
+Entrada principal:
 
-## Pipeline TikTok
+```powershell
+powershell -ExecutionPolicy Bypass -File automation/run_full_daily_publish.ps1
+```
 
-Despues de generar reportes en `reports/`, el flujo recomendado es:
+Generación local sin finalizar/publicar:
 
-1. `python automation/generate_test_reports.py`
-2. `python automation/export_report_data.py`
-3. `python automation/render_tiktok_assets.py`
+```powershell
+python automation/generate_random_daily_commander_bundle.py
+```
 
-El resultado final son 5 PNG por commander dentro de `tiktok_assets/`.
+## Artefactos
 
-## Dependencias del renderer visual
+- `commander_selection_runs/`: evidencia del sorteo y configuración resuelta.
+- `deck_manifests/`: lista canónica completa.
+- `deck_validation/`: puertas, errores, fuentes de mana y estado final.
+- `moxfield_decklists_100/`: listas completas listas para importar.
+- `reports/`: informe Commander Builder V2 en Markdown inglés.
+- `report_data/`: JSON enriquecido del informe.
+- `tiktok_assets/`: seis PNG verticales por deck.
+- `publish_queue/`: payload hash-locked.
+- `legal-site/media/`: JPG públicos utilizados por TikTok.
+- `publish_runs/`: resultados de publicación.
 
-Instalacion recomendada:
+## Puertas críticas
 
-1. `python -m pip install -r requirements-image-rendering.txt`
-2. `python -m playwright install chromium`
+La publicación queda bloqueada si ocurre cualquiera de estas condiciones:
 
-El renderer actual usa Playwright y plantillas HTML/CSS para acercarse al formato visual tipo `Commander Deck Case`.
+- el total no es exactamente 100;
+- una carta está fuera de la color identity;
+- una carta no es paper-legal en Commander;
+- existe una repetición no permitida;
+- la configuración de commanders no es válida;
+- nombre, Oracle ID o datos de Scryfall no coinciden;
+- faltan lands, fuentes de color o roles funcionales;
+- hay demasiados slots de una sola función o demasiadas cartas de coste alto;
+- el deck viola su bracket o el límite de Game Changers;
+- la política oficial no pudo actualizarse;
+- los hashes del manifest, validation, report y queue no coinciden;
+- una carta mostrada no pertenece a la lista completa;
+- no existen exactamente seis imágenes.
 
-## Automatizacion diaria
+No existe bypass para errores críticos. `ALLOW_SHADOW_BUNDLE=1` solamente permite verificar localmente una cola `shadow_ready`; nunca la habilita para TikTok.
 
-Pipeline diario:
+## Report V2
 
-1. `python automation/run_daily_pipeline.py`
-2. revisar salida en `publish_queue/`
-3. `python automation/show_publish_window.py`
+Todo el contenido público está en inglés y sigue una dirección visual cálida de taberna, limpia y centrada en la construcción del deck:
 
-Para registrar tareas en Windows:
+1. Deck Promise
+2. Deck Skeleton
+3. Core Engine
+4. Mana & Cards
+5. Answers & Protection
+6. How It Wins
 
-1. `powershell -ExecutionPolicy Bypass -File automation/create_windows_scheduled_tasks.ps1`
+El carrusel muestra 16 cartas estratégicamente importantes con una razón concreta. La lista completa permanece disponible en el export de 100 cartas.
 
-Horarios configurados:
+## Verificación
 
-- Monday `13:00`
-- Tuesday `12:00`
-- Wednesday `17:00`
-- Thursday `17:00`
-- Friday `18:00`
-- Saturday `17:00`
-- Sunday `09:00`
+```powershell
+python -m unittest discover -s tests -v
+python -m compileall -q automation tiktok_integration
+python automation/stage_tiktok_media.py <report_id>
+python automation/verify_publish_bundle.py <report_id>
+```
 
-## GitHub Actions
+Documentación detallada:
 
-La generacion de contenido puede quedarse por completo en Codex/local.
-GitHub Actions queda solo para la parte publica y TikTok.
+- `automation/commander_report_spec.md`
+- `automation/tiktok_content_pipeline.md`
+- `automation/automation_prompt.md`
 
-Workflows:
+## Publicación
 
-1. `.github/workflows/deploy-pages-from-local-assets.yml`
-2. `.github/workflows/publish-tiktok.yml`
+`automation/finalize_and_publish_bundle.ps1` convierte los PNG a JPG, ejecuta la puerta final, prepara los artefactos auditables, hace commit y push. GitHub Pages publica las imágenes y el workflow de TikTok consume únicamente queue items `ready_for_publish`.
 
-Flujo recomendado:
-
-1. Codex genera reportes, JSON, assets y `publish_queue/` en tu carpeta local conectada
-2. Codex o tu flujo local deja las imagenes publicas dentro de `legal-site/media/<report_id>/`
-3. haces `push` al repo con esos artefactos ya preparados
-4. GitHub Actions despliega `legal-site/` a GitHub Pages
-5. cuando el deploy termina bien, GitHub Actions envia el `queue item` listo a TikTok
-
-Importante:
-
-- GitHub ya no genera contenido ni renderiza imagenes
-- para publicar desde CI ya no hace falta el backend Flask local
-- GitHub Actions usa `TIKTOK_TOKEN_JSON` o `TIKTOK_REFRESH_TOKEN` como secretos
-- debes actualizar en TikTok el prefijo verificado y el `redirect_uri` al host publico que uses
-
-Repositorio objetivo:
-
-- `Sebas1406/mtg-sh-auto`
-
-Scripts locales de apoyo:
-
-1. `powershell -ExecutionPolicy Bypass -File automation/bootstrap_github_remote.ps1`
-2. `powershell -ExecutionPolicy Bypass -File automation/push_publish_bundle.ps1`
-3. `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1`
-4. `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
-5. `powershell -ExecutionPolicy Bypass -File automation/register_full_daily_flow_task.ps1`
-
-Automatizacion local recomendada:
-
-1. Codex genera `publish_queue/<report_id>.json` y `tiktok_assets/<report_id>/`
-2. ejecuta `powershell -ExecutionPolicy Bypass -File automation/finalize_and_publish_bundle.ps1 -ReportId "<report_id>"`
-3. el script copia media a `legal-site/media/<report_id>/`, valida el bundle y hace `push`
-4. GitHub Actions despliega Pages y publica en TikTok
-
-Programacion local:
-
-- tarea diaria a las `07:00`: `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1`
-- prueba puntual con un reporte concreto:
-  `powershell -ExecutionPolicy Bypass -File automation/register_publish_tasks.ps1 -SkipDaily -TestAt "2026-04-29 21:20" -TestReportId "2026-04-29-2100-krenko-mob-boss"`
-
-Automatizacion diaria completa:
-
-1. registra la tarea con `powershell -ExecutionPolicy Bypass -File automation/register_full_daily_flow_task.ps1 -DailyTime "08:00"`
-2. cada dia el script elige un comandante de una rotacion y ejecuta:
-   - generacion del reporte
-   - export JSON
-   - render de imagenes
-   - armado de queue
-   - stage de media
-   - commit y push
-   - Pages + TikTok por GitHub Actions
+La hora registrada actualmente es 08:00 America/Lima.

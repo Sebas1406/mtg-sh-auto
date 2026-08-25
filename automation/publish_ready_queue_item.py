@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -34,6 +35,11 @@ def main() -> None:
         raise SystemExit("Usage: python automation/publish_ready_queue_item.py [report_id]")
 
     report_id = resolve_report_id(sys.argv[1] if len(sys.argv) == 2 else None)
+    subprocess.run(
+        [sys.executable, str(ROOT / "automation" / "verify_publish_bundle.py"), report_id],
+        cwd=str(ROOT),
+        check=True,
+    )
     settings = load_settings()
     api = TikTokAPI(settings)
     token_store = TokenStore(settings.token_store_path)

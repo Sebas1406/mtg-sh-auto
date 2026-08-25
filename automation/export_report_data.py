@@ -1,18 +1,28 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import sys
 import time
+import unicodedata
 import urllib.parse
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from automation.edhrec_recommendations import audit_deck
+
 REPORTS_DIR = ROOT / "reports"
 OUTPUT_DIR = ROOT / "report_data"
 CACHE_DIR = ROOT / ".cache" / "scryfall"
+SCRYFALL_CACHE_TTL_HOURS = int(os.environ.get("SCRYFALL_CACHE_TTL_HOURS", "24"))
 
 META_PREFIXES = {
     "Fecha de generacion": "date",
@@ -23,6 +33,17 @@ META_PREFIXES = {
     "Dificultad": "difficulty",
     "Precio actual en Card Kingdom": "price_value",
     "Fuente de precio": "price_url",
+}
+META_ALIASES = {
+    "date": ["Fecha de generacion"],
+    "time": ["Hora de generacion"],
+    "datetime": ["Fecha y hora de generacion"],
+    "bracket": ["Bracket objetivo"],
+    "bracket_note": ["Nota de bracket", "Nota sobre bracket"],
+    "playstyle": ["Tipo de juego"],
+    "difficulty": ["Dificultad", "Dificultad de pilotaje"],
+    "price_value": ["Precio actual en Card Kingdom", "Precio actual del commander en Card Kingdom"],
+    "price_url": ["Fuente de precio"],
 }
 
 
@@ -44,6 +65,14 @@ def section_slice(text: str, title: str, next_titles: list[str]) -> str:
     return text[start:end].strip()
 
 
+def section_slice_any(text: str, titles: list[str], next_titles: list[str]) -> str:
+    for title in titles:
+        block = section_slice(text, title, next_titles)
+        if block:
+            return block
+    return ""
+
+
 def parse_bullets(block: str) -> dict[str, str]:
     data: dict[str, str] = {}
     for line in block.splitlines():
@@ -53,7 +82,8 @@ def parse_bullets(block: str) -> dict[str, str]:
         if ":" not in line:
             continue
         key, value = line[2:].split(":", 1)
-        data[key.strip()] = value.strip()
+        clean_key = key.strip().strip("*").strip()
+        data[clean_key] = value.strip().strip("*").strip()
     return data
 
 
@@ -84,7 +114,44 @@ def parse_decklist(block: str) -> dict[str, list[str]]:
             continue
         if current and line.startswith("1x "):
             sections[current].append(line[3:].strip())
+            continue
+        if current:
+            quantity_match = re.match(r"^(\d+)\s+(.+)$", line)
+            if quantity_match:
+                quantity = int(quantity_match.group(1))
+                card_name = quantity_match.group(2).strip()
+                sections[current].extend([card_name] * quantity)
     return sections
+
+
+def normalize_section_name(name: str) -> str:
+    return re.sub(r"\s+\(\d+\)$", "", name).strip()
+
+
+def normalize_deck_sections(deck_sections: dict[str, list[str]]) -> dict[str, list[str]]:
+    normalized: dict[str, list[str]] = {}
+    for section, cards in deck_sections.items():
+        normalized[normalize_section_name(section)] = cards
+    return normalized
+
+
+def meta_value(meta: dict[str, str], target: str) -> str:
+    for key in META_ALIASES.get(target, []):
+        if meta.get(key):
+            return meta[key]
+    return ""
+
+
+def split_datetime(value: str) -> tuple[str, str]:
+    match = re.search(r"(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})", value or "")
+    if not match:
+        return "", ""
+    return match.group(1), match.group(2)
+
+
+def bracket_number(value: str) -> int | None:
+    match = re.search(r"\d+", value or "")
+    return int(match.group(0)) if match else None
 
 
 def infer_role(section: str, card_name: str, type_line: str, oracle_text: str) -> str:
@@ -115,11 +182,57 @@ def infer_role(section: str, card_name: str, type_line: str, oracle_text: str) -
     return "support"
 
 
+def normalized_card_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value or "")
+    normalized = normalized.replace("’", "'").replace("‘", "'")
+    return re.sub(r"\s+", " ", normalized).strip().casefold()
+
+
+def card_name_aliases(card: dict) -> set[str]:
+    aliases = {normalized_card_name(card.get("name", ""))}
+    full_name = card.get("name", "")
+    if " // " in full_name:
+        aliases.update(normalized_card_name(part) for part in full_name.split(" // "))
+    for face in card.get("card_faces") or []:
+        aliases.add(normalized_card_name(face.get("name", "")))
+    aliases.discard("")
+    return aliases
+
+
+def card_matches_requested_name(requested_name: str, card: dict) -> bool:
+    return normalized_card_name(requested_name) in card_name_aliases(card)
+
+
+def read_cached_card(name: str, cache_path: Path) -> dict | None:
+    if not cache_path.exists():
+        return None
+    age_seconds = datetime.now(timezone.utc).timestamp() - cache_path.stat().st_mtime
+    if age_seconds > SCRYFALL_CACHE_TTL_HOURS * 3600:
+        return None
+    try:
+        data = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if data.get("object") != "card" or not card_matches_requested_name(name, data):
+        return None
+    return data
+
+
+def write_card_cache(requested_name: str, card: dict) -> None:
+    if not card_matches_requested_name(requested_name, card):
+        raise ValueError(
+            f"Scryfall integrity error: requested {requested_name!r}, received {card.get('name')!r}."
+        )
+    cache_path = CACHE_DIR / f"{urllib.parse.quote(requested_name, safe='')}.json"
+    cache_path.write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def fetch_scryfall_card(name: str) -> dict:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_path = CACHE_DIR / f"{urllib.parse.quote(name, safe='')}.json"
-    if cache_path.exists():
-        return json.loads(cache_path.read_text(encoding="utf-8"))
+    cached = read_cached_card(name, cache_path)
+    if cached is not None:
+        return cached
 
     url = f"https://api.scryfall.com/cards/named?exact={urllib.parse.quote(name)}"
     req = urllib.request.Request(
@@ -133,7 +246,7 @@ def fetch_scryfall_card(name: str) -> dict:
         try:
             with urllib.request.urlopen(req, timeout=20) as response:
                 data = json.load(response)
-                cache_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                write_card_cache(name, data)
                 time.sleep(0.12)
                 return data
         except urllib.error.HTTPError as exc:
@@ -152,10 +265,11 @@ def fetch_scryfall_cards(names: list[str]) -> dict[str, dict]:
 
     for name in names:
         cache_path = CACHE_DIR / f"{urllib.parse.quote(name, safe='')}.json"
-        if cache_path.exists():
-            results[name] = json.loads(cache_path.read_text(encoding="utf-8"))
-        else:
+        cached = read_cached_card(name, cache_path)
+        if cached is None:
             unresolved.append(name)
+        else:
+            results[name] = cached
 
     if not unresolved:
         return results
@@ -179,9 +293,15 @@ def fetch_scryfall_cards(names: list[str]) -> dict[str, dict]:
                 with urllib.request.urlopen(req, timeout=30) as response:
                     payload_data = json.load(response)
                 returned_cards = payload_data.get("data", [])
-                for requested_name, card_data in zip(batch, returned_cards):
-                    cache_path = CACHE_DIR / f"{urllib.parse.quote(requested_name, safe='')}.json"
-                    cache_path.write_text(json.dumps(card_data, ensure_ascii=False, indent=2), encoding="utf-8")
+                returned_by_alias: dict[str, dict] = {}
+                for card_data in returned_cards:
+                    for alias in card_name_aliases(card_data):
+                        returned_by_alias.setdefault(alias, card_data)
+                for requested_name in batch:
+                    card_data = returned_by_alias.get(normalized_card_name(requested_name))
+                    if card_data is None:
+                        continue
+                    write_card_cache(requested_name, card_data)
                     results[requested_name] = card_data
                 time.sleep(0.2)
                 break
@@ -232,7 +352,10 @@ def build_card_entry(name: str, section: str, card: dict) -> dict:
         type_line = " // ".join(face.get("type_line", "") for face in card["card_faces"])
 
     return {
-        "name": name,
+        "name": card.get("name", name),
+        "requested_name": name,
+        "scryfall_id": card.get("id", ""),
+        "oracle_id": card.get("oracle_id", ""),
         "quantity": 1,
         "section": section,
         "role": infer_role(section, name, type_line, oracle_text),
@@ -240,6 +363,10 @@ def build_card_entry(name: str, section: str, card: dict) -> dict:
         "cmc": card.get("cmc", 0),
         "type_line": type_line,
         "oracle_text": oracle_text.replace("\n", " ").strip(),
+        "color_identity": card.get("color_identity", []),
+        "legalities": card.get("legalities", {}),
+        "games": card.get("games", []),
+        "security_stamp": card.get("security_stamp"),
         "image_url": image_url_from_card(card),
         "art_crop_url": art_crop_url_from_card(card),
         "prices": card.get("prices", {}),
@@ -331,9 +458,9 @@ def parse_report(path: Path) -> dict:
     if not title_match:
         raise ValueError(f"No se encontro el titulo principal en {path}")
 
-    title = title_match.group(1).strip()
-    summary = section_slice(text, "Resumen", ["Commander", "Plan de juego", "Decklist"])
-    commander_block = section_slice(text, "Commander", ["Plan de juego", "Decklist", "Notas de construccion"])
+    raw_title = title_match.group(1).strip()
+    summary = section_slice_any(text, ["Resumen", "Resumen del mazo"], ["Commander", "Datos del commander", "Plan de juego", "Decklist"])
+    commander_block = section_slice_any(text, ["Commander", "Datos del commander"], ["Plan de juego", "Decklist", "Notas de construccion"])
     plan_block = section_slice(text, "Plan de juego", ["Decklist", "Notas de construccion"])
     decklist_block = section_slice(text, "Decklist", ["Notas de construccion", "Riesgos y puntos debiles", "Fuentes"])
     notes_block = section_slice(text, "Notas de construccion", ["Riesgos y puntos debiles", "Fuentes"])
@@ -342,12 +469,19 @@ def parse_report(path: Path) -> dict:
     meta_block = text.split("## Resumen", 1)[0]
     meta = parse_bullets(meta_block)
     commander_meta = parse_bullets(commander_block)
+    title = meta.get("Commander") or commander_meta.get("Nombre") or re.sub(r"\s+-\s+Informe Commander$", "", raw_title).strip()
     gameplan = parse_plan_block(plan_block)
-    deck_sections = parse_decklist(decklist_block)
+    deck_sections = normalize_deck_sections(parse_decklist(decklist_block))
     notes = [line[2:].strip() for line in notes_block.splitlines() if line.strip().startswith("- ")]
     risks = [line[2:].strip() for line in risks_block.splitlines() if line.strip().startswith("- ")]
 
     normalized_meta = {target: meta.get(source, "") for source, target in META_PREFIXES.items()}
+    for target in META_ALIASES:
+        normalized_meta[target] = normalized_meta.get(target) or meta_value(meta, target)
+    if not normalized_meta.get("date") or not normalized_meta.get("time"):
+        date_value, time_value = split_datetime(normalized_meta.get("datetime", ""))
+        normalized_meta["date"] = normalized_meta.get("date") or date_value
+        normalized_meta["time"] = normalized_meta.get("time") or time_value
     names_to_fetch = [title]
     for section_name, cards in deck_sections.items():
         if section_name == "Commander":
@@ -379,7 +513,7 @@ def parse_report(path: Path) -> dict:
         },
         "summary": summary,
         "summary_short": truncate_text(summary, 160),
-        "bracket": int(normalized_meta["bracket"]) if normalized_meta["bracket"] else None,
+        "bracket": bracket_number(normalized_meta["bracket"]),
         "bracket_note": normalized_meta["bracket_note"],
         "playstyle": normalized_meta["playstyle"],
         "difficulty": normalized_meta["difficulty"],
@@ -403,6 +537,14 @@ def parse_report(path: Path) -> dict:
         "build_notes": notes,
         "weaknesses": risks,
     }
+    try:
+        result["edhrec"] = audit_deck(title, [card["name"] for card in card_entries])
+    except Exception as exc:
+        result["edhrec"] = {
+            "source": f"https://edhrec.com/commanders/{title.lower().replace(' ', '-')}",
+            "error": str(exc),
+            "quality_flags": ["EDHREC audit could not be completed; review recommendations manually before publishing."],
+        }
     result["content_angle"] = build_content_angle(result, card_entries)
     return result
 

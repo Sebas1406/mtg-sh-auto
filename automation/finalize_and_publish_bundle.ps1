@@ -32,9 +32,12 @@ $pushArgs = @{
 
 if ($ReportId) {
     python automation/stage_tiktok_media.py $ReportId
+    if ($LASTEXITCODE -ne 0) {
+        throw "Media staging failed for $ReportId with exit code $LASTEXITCODE."
+    }
     $pushArgs.ReportId = $ReportId
 } else {
-    python automation/stage_tiktok_media.py
+    throw "ReportId is required so finalization cannot select an unintended queue item."
 }
 
 if ($CommitMessage) {

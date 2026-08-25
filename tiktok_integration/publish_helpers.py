@@ -47,9 +47,18 @@ def stage_queue_media(report_id: str) -> list[Path]:
     data = load_queue_entry(report_id)
     target_dir = LEGAL_MEDIA_DIR / report_id
     target_dir.mkdir(parents=True, exist_ok=True)
+    resolved_root = LEGAL_MEDIA_DIR.resolve()
+    resolved_target = target_dir.resolve()
+    if resolved_root not in resolved_target.parents:
+        raise ValueError(f"Refusing to stage media outside {resolved_root}: {resolved_target}")
+    for existing in target_dir.iterdir():
+        if existing.is_file():
+            existing.unlink()
     written: list[Path] = []
     for source in data.get("images", []):
         source_path = Path(source)
+        if not source_path.is_absolute():
+            source_path = ROOT / source_path
         if not source_path.exists():
             raise FileNotFoundError(f"Image not found: {source_path}")
         if source_path.suffix.lower() == ".png":

@@ -1,30 +1,31 @@
-# Automation Prompt
+# Daily Commander Builder Automation
 
-Genera un nuevo informe Markdown de Commander para este proyecto.
+Run the validated Commander Builder V2 pipeline for the project.
 
-En cada ejecucion:
+1. Select one card through Scryfall's live random endpoint using:
+   `legal:commander is:commander game:paper -is:funny -is:digital`.
+2. Resolve any required legal configuration, including Background, Partner with, or Doctor's companion.
+3. Use bracket 3 unless `COMMANDER_TARGET_BRACKET` explicitly supplies another bracket.
+4. Load current EDHREC recommendations as synergy evidence. EDHREC is not a legality source and must not be used as a simple top-card list.
+5. Refresh the official Commander Game Changers policy from Wizards.
+6. Build a canonical deck manifest containing exactly 100 cards:
+   - one commander plus 99 mainboard cards, or two commanders plus 98;
+   - paper-legal Commander cards only;
+   - strict combined color identity;
+   - singleton except for basic lands and explicit Oracle-text exceptions;
+   - functional mana, ramp, card advantage, interaction, board wipes, protection, and win conditions;
+   - a balanced mana curve and sufficient colored sources;
+   - bracket-compliant Game Changers and play patterns.
+7. Give every card roles, a package, a utility score, and a concise English explanation of why it belongs.
+8. Validate the manifest. Any critical failure must stop the run before rendering, staging, pushing, or publishing.
+9. Export:
+   - `deck_manifests/<report_id>.json`
+   - `deck_validation/<report_id>.json`
+   - `moxfield_decklists_100/<report_id>.txt`
+   - `reports/<report_id>.md`
+   - `report_data/<report_id>.json`
+   - six English TikTok slides in `tiktok_assets/<report_id>/`
+   - `publish_queue/<report_id>.json`
+10. Only a queue item with `validation_status: pass`, matching deck hashes, and `status: ready_for_publish` may continue to TikTok.
 
-1. Busca en internet una carta de Magic: The Gathering que pueda ser commander de forma legal en Commander/EDH y elige una al azar.
-2. Asigna aleatoriamente a ese mazo un bracket entre 2, 3, 4 o 5.
-3. Deja claro en el informe que ese bracket fue asignado por la automatizacion para fines del proyecto.
-4. Construye una decklist completa y coherente de exactamente 100 cartas contando el commander, respetando identidad de color y legalidad de Commander.
-5. Consulta el precio actual de la carta commander en Card Kingdom e incluye el valor y el enlace utilizado como fuente.
-6. Indica el tipo de juego del mazo y la dificultad de pilotaje.
-7. Redacta un informe Markdown autocontenido en espanol.
-8. Guarda el archivo en `reports/` con nombre `YYYY-MM-DD-HHMM-commander-slug.md`.
-9. Si el archivo ya existe, agrega un sufijo numerico para no sobrescribirlo.
-
-## Contenido minimo del informe
-
-- Titulo con el nombre del commander
-- Fecha y hora de generacion
-- Bracket objetivo
-- Tipo de juego
-- Dificultad
-- Precio actual en Card Kingdom
-- Resumen del mazo
-- Datos del commander
-- Plan de juego por early game, mid game y late game
-- Decklist agrupada por categorias
-- Notas de construccion
-- Fuentes
+The public carousel shows a curated subset of useful cards. The complete 100-card list remains authoritative and available as the decklist export.
